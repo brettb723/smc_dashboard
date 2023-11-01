@@ -6,6 +6,7 @@ from data_fetcher import fetch_appfolio_report
 # Define aging bucket labels
 labels = ["0-7 days", "8-30 days", "31-60 days", "61-90 days", "90+ days"]
 
+
 def process_data(data):
     # Convert to DataFrame
     df = pd.DataFrame(data)
@@ -24,12 +25,11 @@ def process_data(data):
 
     return df
 
-def main():
-    st.title("Work Orders Visualization")
-
+def work_orders_report():
+    st.title("Work Order Reports")
+    
     # Fetch data
     data = fetch_appfolio_report("work_order")
-
     if not data:
         st.error("Failed to fetch data. Please check the connection or credentials.")
         return
@@ -62,6 +62,25 @@ def main():
     filtered_df = filtered_df.reset_index(drop=True)
     filtered_df.index += 1
     st.write(filtered_df.reset_index(drop=True))  # Reset index and drop the default index column
+
+def welcome_page():
+    st.title("Welcome")
+    st.write("Welcome to the reporting dashboard. Please select a report from the left sidebar to view its contents.")
+
+
+def main():
+    # Sidebar navigation
+    reports = ["Welcome", "Work Orders Visualization", "Another Report"]
+    choice = st.sidebar.selectbox("Choose a report", reports)
+    
+    if choice == "Welcome":
+        welcome_page()
+    elif choice == "Work Orders Visualization":
+        work_orders_report()
+    elif choice == "Another Report":
+        # Add code for another report here
+        st.title("Another Report")
+        st.write("This is another report's content.")
 
 if __name__ == "__main__":
     main()

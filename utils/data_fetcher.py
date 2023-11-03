@@ -11,7 +11,7 @@ def fetch_appfolio_report(report_name, columns=None):
     base_url = "standardmgmtco.appfolio.com/api/v1/reports"
 
     # Construct the URL without the date range
-    url = f"https://{client_id}:{client_secret}@{base_url}/{report_name}.json?paginate_results=false"
+    url = f"https://{client_id}:{client_secret}@{base_url}/{report_name}.json?paginate_results=false&from_date=01/01/2020&to_date=12/30/2025"
 
     # If columns are provided, add them as query parameters
     if columns:

@@ -6,9 +6,17 @@ def process_data(work_order_data, property_directory_data):
     # Convert data to pandas DataFrames
     work_order_df = pd.DataFrame(work_order_data)
     property_directory_df = pd.DataFrame(property_directory_data)
-    # Merge dataframes on 'PropertyId'
-    merged_df = work_order_df.merge(property_directory_df, on='PropertyId', how='left')
+
+    # Filter out the unwanted statuses
+    filtered_work_order_df = work_order_df[
+        ~work_order_df['Status'].isin(['Completed', 'Canceled', 'Completed No Need To Bill'])
+    ]
+    
+    # Merge filtered dataframes on 'PropertyId'
+    merged_df = filtered_work_order_df.merge(property_directory_df, on='PropertyId', how='left')
     return merged_df
+
+
 
 def display_report():
     st.title("Work Order Aging Report")

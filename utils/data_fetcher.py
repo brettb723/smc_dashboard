@@ -1,6 +1,8 @@
 import requests
 import json
 import os
+import pandas as pd 
+from tabulate import tabulate
 
 
 
@@ -26,6 +28,25 @@ def fetch_appfolio_report(report_name, columns=None):
         return response.json()
     else:
         return None
+
+def view_report(report_name):
+    """
+    Fetches the report with the given name and displays the first five rows as key-value pairs.
+
+    :param report_name: The name of the report to fetch and display.
+    """
+    data = fetch_appfolio_report(report_name)
+
+    # Check if the data is valid and has the expected structure
+    if data and isinstance(data, list) and len(data) > 0:
+        # Loop through the first five records and print each as key-value pairs
+        for i, record in enumerate(data[:5]):
+            print(f"Record {i+1}:")
+            for key, value in record.items():
+                print(f"  {key}: {value}")
+            print()  # Add a newline for spacing between records
+    else:
+        print("No data available or invalid format.")
 
 if __name__ == "__main__":
     data = fetch_appfolio_report("work_order")

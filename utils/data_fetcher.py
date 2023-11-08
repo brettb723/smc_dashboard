@@ -2,7 +2,6 @@ import requests
 import json
 import os
 import pandas as pd 
-from tabulate import tabulate
 
 
 

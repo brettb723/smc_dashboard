@@ -39,7 +39,7 @@ def view_report(report_name):
     # Check if the data is valid and has the expected structure
     if data and isinstance(data, list) and len(data) > 0:
         # Loop through the first five records and print each as key-value pairs
-        for i, record in enumerate(data[:5]):
+        for i, record in enumerate(data[:500]):
             print(f"Record {i+1}:")
             for key, value in record.items():
                 print(f"  {key}: {value}")

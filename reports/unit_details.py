@@ -1,18 +1,15 @@
 import streamlit as st
 import pandas as pd
 from utils.data_fetcher import fetch_appfolio_report
-from datetime import datetime
 
-def clean_percentage(value):
+def clean_numeric(value):
     if isinstance(value, str):
-        # Remove percentage signs and commas
-        value = value.replace('%', '').replace(',', '')
-        # Convert to float
+        value = value.replace('%', '').replace(',', '')  # Remove percentage signs and commas
         try:
             return float(value)
         except ValueError:
-            return None  # Return None if conversion fails
-    return value  # Return the original value if it's not a string
+            return None
+    return value
 
 def unit_detail_report():
     st.title("Combined Report View")
@@ -22,47 +19,54 @@ def unit_detail_report():
     property_directory_data = fetch_appfolio_report("property_directory")
     rent_roll_data = fetch_appfolio_report("rent_roll")
 
-    # Check if the data was successfully fetched
     if unit_details_data and property_directory_data and rent_roll_data:
-        # Convert the lists of dictionaries to DataFrames
         unit_details_df = pd.DataFrame(unit_details_data)
         property_directory_df = pd.DataFrame(property_directory_data)
         rent_roll_df = pd.DataFrame(rent_roll_data)
 
-        # Join unit_directory with property_directory using PropertyId
+        unit_count = unit_details_df['PropertyId'].value_counts().reset_index()
+        unit_count.columns = ['PropertyId', 'UnitCount']
+        property_directory_df = pd.merge(property_directory_df, unit_count, on='PropertyId', how='left')
         unit_property_df = pd.merge(unit_details_df, property_directory_df, on='PropertyId', how='left')
-
-        # Now join the combined unit and property dataframe with rent_roll using UnitId
         combined_df = pd.merge(unit_property_df, rent_roll_df, on='UnitId', how='left')
 
-        # Convert 'ManagementFeePercent' to numeric, coercing errors to NaN
-        combined_df['ManagementFeePercent'] = combined_df['ManagementFeePercent'].apply(clean_percentage)
-        combined_df['ManagementFeePercent'] = pd.to_numeric(combined_df['ManagementFeePercent'], errors='coerce')
+        # Apply the clean_numeric function to percentage and monetary columns
+        combined_df['ManagementFeePercent'] = combined_df['ManagementFeePercent'].apply(clean_numeric)
+        combined_df['Rent'] = combined_df['Rent'].apply(clean_numeric)
+        combined_df['ManagementFlatFee'] = combined_df['ManagementFlatFee'].apply(clean_numeric)
+        combined_df['Deposit'] = combined_df['Deposit'].apply(clean_numeric)
 
-        # Convert 'Rent' and 'ManagementFlatFee' to numeric if they are not already
-        combined_df['Rent'] = pd.to_numeric(combined_df['Rent'], errors='coerce')
-        combined_df['ManagementFlatFee'] = pd.to_numeric(combined_df['ManagementFlatFee'], errors='coerce')
+        def calculate_effective_mgmt_fee(row):
+            if pd.notnull(row['ManagementFeePercent']) and row['ManagementFeePercent'] > 0:
+                return row['Rent'] * row['ManagementFeePercent'] / 100
+            elif pd.notnull(row['ManagementFlatFee']) and pd.notnull(row['UnitCount']):
+                return row['ManagementFlatFee'] / row['UnitCount']
+            return 0
 
-        # Add a new column for the effective management fee
-        combined_df['effective_mgmt_fee'] = combined_df.apply(
-            lambda row: (row['Rent'] * row['ManagementFeePercent'] / 100) 
-                        if pd.notnull(row['ManagementFeePercent']) and row['ManagementFeePercent'] > 0 
-                        else row['ManagementFlatFee'],
-            axis=1
-        )
+        combined_df['EffectiveMgmtFee'] = combined_df.apply(calculate_effective_mgmt_fee, axis=1)
 
-        # Select the specified columns to display, including the new effective_mgmt_fee
+        # Calculate KPIs
+        total_units = unit_details_df['UnitId'].nunique()
+        monthly_mgmt_fees = combined_df['EffectiveMgmtFee'].sum()
+
+        # Display KPIs
+        st.subheader("Key Performance Indicators")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric(label="Total Units Under Management", value=total_units)
+        with col2:
+            st.metric(label="Monthly Effective Management Fees", value=f"${monthly_mgmt_fees:,.2f}")
+
         columns_to_display = [
             'Owners', 'PropertyAddress_x', 'ManagementFeePercent', 'ManagementFlatFee',
-            'ManagementFeeType', 'Tenant', 'Rent', 'Deposit', 'Late', 'effective_mgmt_fee'
+            'ManagementFeeType', 'Tenant', 'Rent', 'Deposit', 'Late', 'EffectiveMgmtFee'
         ]
-
-        # Filter the dataframe to include only the specified columns
         final_df = combined_df[columns_to_display]
-
-        # Display the filtered data
         st.subheader("Filtered Combined Unit Details with Effective Management Fee")
         st.dataframe(final_df)
 
     else:
         st.error("Failed to fetch one or more reports. Please check the connection or credentials.")
+
+# Call the function to display the report in Streamlit
+unit_detail_report()

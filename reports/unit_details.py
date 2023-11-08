@@ -49,13 +49,25 @@ def unit_detail_report():
         total_units = unit_details_df['UnitId'].nunique()
         monthly_mgmt_fees = combined_df['EffectiveMgmtFee'].sum()
 
-        # Display KPIs
+         # Calculate KPIs for the summary table
+        summary_df = combined_df.groupby('Owners').agg(
+            UnitCount=('UnitId', 'nunique'),
+            SumEffectiveMgmtFee=('EffectiveMgmtFee', 'sum')
+        ).reset_index()
+
+                # Display KPIs
         st.subheader("Key Performance Indicators")
         col1, col2 = st.columns(2)
         with col1:
             st.metric(label="Total Units Under Management", value=total_units)
         with col2:
             st.metric(label="Monthly Effective Management Fees", value=f"${monthly_mgmt_fees:,.2f}")
+
+         # Display the summary table
+        st.subheader("Summary by Owner")
+        st.dataframe(summary_df.style.format({'SumEffectiveMgmtFee': "${:,.2f}"}))
+
+
 
         columns_to_display = [
             'Owners', 'PropertyAddress_x', 'ManagementFeePercent', 'ManagementFlatFee',

@@ -80,5 +80,4 @@ def unit_detail_report():
     else:
         st.error("Failed to fetch one or more reports. Please check the connection or credentials.")
 
-# Call the function to display the report in Streamlit
-unit_detail_report()
+

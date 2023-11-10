@@ -1,0 +1,16 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Get Appfolio Data",
+    "description": "Retrieves data from Appfolio for a specific report.",
+    "version": "v1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://92888d78c919bda5a8d7dd6df9df3fbb:a72dcb56d345e47b4891212cd2894686@standardmgmtco.appfolio.com/api/v1/reports/rent_roll.json?paginate_results=false&from_date=01/01/2020&to_date=12/30/2025""
+    }
+  ],
+  "components": {
+    "schemas": {}
+  }
+}
